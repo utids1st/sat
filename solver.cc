@@ -8,6 +8,7 @@
 typedef int Literal;
 typedef std::vector<Literal> Clause;
 typedef std::vector<Clause> Constraint;
+typedef std::vector< std::vector<bool> >  Candidates;
 
 using namespace std;
 
@@ -27,19 +28,19 @@ Clause get_line(string line){
 	return clause;
 }
 
-void print_cons(Constraint constraint){
+void print_cons(const Constraint constraint){
 	int count = 0;
-	for (Constraint::iterator i = constraint.begin(); i != constraint.end(); ++i) {
+	for (Constraint::const_iterator i = constraint.begin(); i != constraint.end(); ++i) {
 		++count;
 		cout << "Constraint#" << count << ": ";
-		for (Clause::iterator j = (*i).begin(); j != (*i).end(); ++j){
+		for (Clause::const_iterator j = (*i).begin(); j != (*i).end(); ++j){
 			cout << *j << " ";
 		}
 		cout << endl;
 	}
 }
 
-Constraint init_cons(){
+Constraint init_cons(int &N_clause, int &N_var){
 	cout << "name of input file: ";
 	string fname;
 	cin >> fname;
@@ -53,8 +54,6 @@ Constraint init_cons(){
 	string line;
 
 	string hoge, format;
-	int N_clause, N_var; //number of Clause, variable
-
 
 	//ここから入力ファイルの読み込み（コメント行と空行が冒頭にあって，
 	//p行以降はコメント行や空行を含まず，制約が並んでいるコトを前提としている点は改善の余地あり）
@@ -87,14 +86,31 @@ Constraint init_cons(){
 	return constraint;
 }
 
+Constraint dpll_solve(const Constraint constraint, Candidates candidates, int depth, bool sat_flag){
+	if (sat_flag){ return constraint; }
+
+
+}
+
+Constraint solve(const Constraint constraint, Candidates candidates, bool sat_flag){
+	return dpll_solve(constraint, candidates, 0, sat_flag); // 0 is depth
+}
+
+
 int main(int argc, char const *argv[])
 {
-	Constraint constraint = init_cons();
+	int N_clause, N_var; //number of Clause, variable
 
-	// デバッグ用
+	Constraint constraint = init_cons(N_clause, N_var);
+
 	// print_cons(constraint);
+	
+	bool sat_flag = false;
+	Candidates candidates;
 
-	if(1)//solved 
+	// Constraint ans = solve(constraint, candidates, sat_flag);
+
+	if(sat_flag)
 	{
 		cout << "sat: " << endl
 			 << "ans" << endl;
