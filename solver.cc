@@ -27,13 +27,24 @@ Clause get_line(string line){
 	return clause;
 }
 
-int main(int argc, char const *argv[])
-{
+void print_cons(Constraint constraint){
+	int count = 0;
+	for (Constraint::iterator i = constraint.begin(); i != constraint.end(); ++i) {
+		++count;
+		cout << "Constraint#" << count << ": ";
+		for (Clause::iterator j = (*i).begin(); j != (*i).end(); ++j){
+			cout << *j << " ";
+		}
+		cout << endl;
+	}
+}
+
+Constraint init_cons(){
 	cout << "name of input file: ";
 	string fname;
 	cin >> fname;
 	ifstream ifs(fname.c_str());
-
+	
 	if(ifs.fail()) {
 		cerr << "File do not exist.\n";
 		exit(0);
@@ -72,16 +83,16 @@ int main(int argc, char const *argv[])
 
 		constraint.push_back(clause);
 	}
+	
+	return constraint;
+}
 
-	int count = 0;
-	for (Constraint::iterator i = constraint.begin(); i != constraint.end(); ++i) {
-		++count;
-		cout << "Constraint#" << count << ": ";
-		for (Clause::iterator j = (*i).begin(); j != (*i).end(); ++j){
-			cout << *j << " ";
-		}
-		cout << endl;
-	}
+int main(int argc, char const *argv[])
+{
+	Constraint constraint = init_cons();
+
+	// デバッグ用
+	// print_cons(constraint);
 
 	if(1)//solved 
 	{
