@@ -99,6 +99,7 @@ int get_candidate(const Candidates candidates){
 			candidate = count;
 			break;
 		}
+		count++;
 	}
 
 	return candidate;
@@ -108,29 +109,6 @@ bool is_include(const std::vector<bool> v, bool val){
 	std::vector<bool>::const_iterator i;
 	i = find(v.begin(), v.end(), val);
 	return i!=v.end() ? true : false;
-}
-
-bool check_constraint(const Constraint &constraint, const Candidates candidates){
-	print_cons(constraint);
-	for (Constraint::const_iterator i = constraint.begin(); i != constraint.end(); ++i) {
-		for (Clause::const_iterator j = (*i).begin(); j != (*i).end(); ++j) {
-			//clause の中に ひとつはsatなものがあればよい
-			if ( (*j)>=0 ){
-				if(is_include(candidates.at((*j)-1), true)){
-					cout << "break1!\n";
-					break;
-				}
-			}
-			else{
-				if(is_include(candidates.at((*j)-1), false)){
-					cout << "break2!\n";
-					break;
-				}
-			}
-			return false; //unsat
-		}
-	}
-	return true; // every clauses are satisfied
 }
 
 void print_candidates(const Candidates v, const int depth){
@@ -148,19 +126,50 @@ void print_candidates(const Candidates v, const int depth){
 	cout << "\n";
 }
 
+bool check_constraint(const Constraint &constraint, const Candidates candidates){
+	// print_cons(constraint);
+	// print_candidates(candidates, 0);
+	for (Constraint::const_iterator i = constraint.begin(); i != constraint.end(); ++i) {
+		for (Clause::const_iterator j = (*i).begin(); j != (*i).end(); ++j) {
+			//clause の中に ひとつはsatなものがあればよい
+			// cout << "var # " << *j << endl;
+
+			if ( (*j)>=0 ){
+				if(is_include(candidates.at((*j)-1), true)){
+					// cout << "break1!\n";
+					goto NEXT_CLAUSE;
+				}
+			}
+			else{
+				if(is_include(candidates.at(-(*j)-1), false)){
+					// cout << "break2!\n";
+					goto NEXT_CLAUSE;
+				}
+			}
+			// cout << "ret false!\n\n";
+		}
+		return false; //unsat
+
+		NEXT_CLAUSE: //this clause is satisfied
+		;
+	}
+	// cout << "ret true!\n";
+	return true; // every clauses are satisfied
+}
+
 bool set_candidate(const Constraint &constraint, Candidates &candidates, int candidate, bool val){
 	assert(candidates.at(candidate).size() == 2);
 
 	candidates.at(candidate).clear();
 	candidates.at(candidate).push_back(val);
 	// cout << val << endl;
-	print_candidates(candidates, 1);
+	// print_candidates(candidates, 1);
 
 	return check_constraint(constraint, candidates);
 }
 
 Candidates dpll_solve(const Constraint &constraint, Candidates &candidates, int depth, bool &sat_flag){
-	cout << "what's happens?\n";
+	// cout << "what's happens?\n";
 	// print_candidates(candidates,depth);
 
 	if (sat_flag){
@@ -170,13 +179,14 @@ Candidates dpll_solve(const Constraint &constraint, Candidates &candidates, int 
 	int candidate = get_candidate(candidates);
 	// cout << candidate << endl;
 	if (candidate==-1) { // find sat_answer!
-		cout << "sat!!!!!" << endl;
+		// cout << "sat!!!!!" << endl;
 		sat_flag = true;
 		return candidates;
 	}
 
 	Candidates candidates1(candidates);
 	if (set_candidate(constraint, candidates1, candidate, true)){
+		// print_candidates(candidates1, depth);
 		// cout << "set!\n";
 		Candidates ans1 = dpll_solve(constraint, candidates1, depth+1, sat_flag);
 		if (sat_flag){ return ans1; }
@@ -185,6 +195,7 @@ Candidates dpll_solve(const Constraint &constraint, Candidates &candidates, int 
 
 	Candidates candidates2(candidates);
 	if (set_candidate(constraint, candidates2, candidate, false)){
+		// print_candidates(candidates2 , depth);
 		Candidates ans2 = dpll_solve(constraint, candidates2, depth+1, sat_flag);
 		if (sat_flag){ return ans2; }
 	}
@@ -195,6 +206,15 @@ Candidates dpll_solve(const Constraint &constraint, Candidates &candidates, int 
 
 Candidates solve(const Constraint &constraint, Candidates &candidates, bool &sat_flag){
 	return dpll_solve(constraint, candidates, 0, sat_flag); // 0 is depth of root
+}
+
+void print_ans(const Candidates answer){
+	int count = 0;
+	for (Candidates::const_iterator i = answer.begin(); i != answer.end(); ++i){
+		++count;
+		assert((*i).size() == 1);
+		cout << "var #" << count << " is " << (*i).at(0) << endl;
+	}
 }
 
 
@@ -226,7 +246,7 @@ int main(int argc, char const *argv[])
 	if(sat_flag)
 	{
 		cout << "sat: " << endl;
-		// print_ans(answer);
+		print_ans(answer);
 	}
 	else
 	{
