@@ -1,6 +1,9 @@
 sat solver
 
-input -> cnf(DIMACS cnf format)
+rake && ./solver
+を実行して，
+DIMACSフォーマットの.cnfファイルの名前を入力したら解いてくれます。
+(サンプルとしてsample.cnfが入っています)
 
 見本
 minisat
