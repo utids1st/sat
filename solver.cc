@@ -7,6 +7,9 @@
 #include <bitset>
 #include <algorithm>
 
+
+//constraint,clauseに入っている変数は１スタートであることに注意（constraintで-を使って否定を表しているので0スタートだと不便）
+
 typedef int Literal;
 typedef std::vector<Literal> Clause;
 typedef std::vector<Clause> Constraint;
@@ -69,7 +72,7 @@ Constraint init_cons(int &N_clause, int &N_var){
 		}
 		else if (line.at(0) == 'p'){
 			stringstream strs(line);
-			strs >> hoge >> format >> N_clause >> N_var;
+			strs >> hoge >> format >> N_var >> N_clause;
 			break;
 		}
 	}	
@@ -101,30 +104,48 @@ int get_candidate(const Candidates candidates){
 	return candidate;
 }
 
-bool is_include(std::vector<bool> v, bool val){
-	std::vector<bool>::iterator i;
+bool is_include(const std::vector<bool> v, bool val){
+	std::vector<bool>::const_iterator i;
 	i = find(v.begin(), v.end(), val);
 	return i!=v.end() ? true : false;
 }
 
 bool check_constraint(const Constraint &constraint, const Candidates candidates){
+	print_cons(constraint);
 	for (Constraint::const_iterator i = constraint.begin(); i != constraint.end(); ++i) {
 		for (Clause::const_iterator j = (*i).begin(); j != (*i).end(); ++j) {
 			//clause の中に ひとつはsatなものがあればよい
 			if ( (*j)>=0 ){
-				if(is_include(candidates.at(*j), true)){
+				if(is_include(candidates.at((*j)-1), true)){
+					cout << "break1!\n";
 					break;
 				}
 			}
 			else{
-				if(is_include(candidates.at(*j), false)){
+				if(is_include(candidates.at((*j)-1), false)){
+					cout << "break2!\n";
 					break;
 				}
 			}
+			return false; //unsat
 		}
-		return false; //unsat
 	}
 	return true; // every clauses are satisfied
+}
+
+void print_candidates(const Candidates v, const int depth){
+	cout << "now in depth : " << depth << "\n";
+
+	int count = 0;
+	for (Candidates::const_iterator i = v.begin(); i != v.end(); ++i){
+		++count;
+		cout << "var#" << count << " ";
+		for (std::vector<bool>::const_iterator j = (*i).begin(); j != (*i).end(); ++j){
+			cout << *j << ":";
+		}
+		cout << "\n";
+	}
+	cout << "\n";
 }
 
 bool set_candidate(const Constraint &constraint, Candidates &candidates, int candidate, bool val){
@@ -132,23 +153,31 @@ bool set_candidate(const Constraint &constraint, Candidates &candidates, int can
 
 	candidates.at(candidate).clear();
 	candidates.at(candidate).push_back(val);
+	// cout << val << endl;
+	print_candidates(candidates, 1);
 
 	return check_constraint(constraint, candidates);
 }
 
-Candidates dpll_solve(const Constraint &constraint, Candidates &candidates, int depth, bool sat_flag){
+Candidates dpll_solve(const Constraint &constraint, Candidates &candidates, int depth, bool &sat_flag){
+	cout << "what's happens?\n";
+	// print_candidates(candidates,depth);
+
 	if (sat_flag){
 		return candidates;
 	}
 
 	int candidate = get_candidate(candidates);
+	// cout << candidate << endl;
 	if (candidate==-1) { // find sat_answer!
+		cout << "sat!!!!!" << endl;
 		sat_flag = true;
 		return candidates;
 	}
 
 	Candidates candidates1(candidates);
 	if (set_candidate(constraint, candidates1, candidate, true)){
+		// cout << "set!\n";
 		Candidates ans1 = dpll_solve(constraint, candidates1, depth+1, sat_flag);
 		if (sat_flag){ return ans1; }
 	}
@@ -164,7 +193,7 @@ Candidates dpll_solve(const Constraint &constraint, Candidates &candidates, int 
 	return fail; //ゴミ
 }
 
-Candidates solve(const Constraint &constraint, Candidates &candidates, bool sat_flag){
+Candidates solve(const Constraint &constraint, Candidates &candidates, bool &sat_flag){
 	return dpll_solve(constraint, candidates, 0, sat_flag); // 0 is depth of root
 }
 
@@ -177,7 +206,7 @@ int main(int argc, char const *argv[])
 	
 	//割り当て済み変数の管理
 	// bitset<N_var> assigned; // なんかテンプレート引数に変数は使えないっぽい
-	std::vector<bool> assigned(N_var,false);
+	// std::vector<bool> assigned(N_var,false);
 
 	// print_cons(constraint);
 
@@ -189,6 +218,8 @@ int main(int argc, char const *argv[])
 		v.push_back(false);
 		candidates.push_back(v);
 	}
+
+	// print_candidates(candidates);
 
 	Candidates answer = solve(constraint, candidates, sat_flag);
 
