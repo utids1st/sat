@@ -5,6 +5,9 @@ rake && ./solver
 DIMACSフォーマットの.cnfファイルの名前を入力したら解いてくれます。
 (サンプルとしてsample.cnfが入っています)
 
+http://www.cs.ubc.ca/~hoos/SATLIB/benchm.html
+にベンチマーク用のDIMACSフォーマットの問題がたくさんあります。
+
 見本
 minisat
 grasp
