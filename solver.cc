@@ -6,7 +6,7 @@
 #include <cassert>
 #include <bitset>
 #include <algorithm>
-
+#include <iomanip>    // manipulator setw()
 
 //constraint,clauseに入っている変数は１スタートであることに注意（constraintで-を使って否定を表しているので0スタートだと不便）
 
@@ -88,6 +88,51 @@ Constraint init_cons(int &N_clause, int &N_var){
 		constraint.push_back(clause);
 	}
 	
+	return constraint;
+}
+
+Constraint init_cons_stdin(int &N_clause, int &N_var, char const *argv[] ){
+	cout << "input file is ... " << argv[1] << endl;
+	string fname = argv[1];
+	ifstream ifs(fname.c_str());
+
+	if(ifs.fail()) {
+		cerr << "File do not exist.\n";
+		exit(0);
+	}
+
+	string line;
+
+	string hoge, format;
+
+	//ここから入力ファイルの読み込み（コメント行と空行が冒頭にあって，
+	//p行以降はコメント行や空行を含まず，制約が並んでいるコトを前提としている点は改善の余地あり）
+
+	while(getline(ifs, line)) {
+		if (line == ""){
+			continue;
+		}
+		else if (line.at(0) == 'c'){
+			continue;
+		}
+		else if (line.at(0) == 'p'){
+			stringstream strs(line);
+			strs >> hoge >> format >> N_var >> N_clause;
+			break;
+		}
+	}
+	assert(hoge == "p");
+	assert(format == "cnf");
+
+	Constraint constraint;
+
+	while(getline(ifs,line)){
+		Clause clause;
+		clause = get_line(line);
+
+		constraint.push_back(clause);
+	}
+
 	return constraint;
 }
 
@@ -217,13 +262,35 @@ void print_ans(const Candidates answer){
 	}
 }
 
+void print_ans_to_file(const Candidates answer, const char * filename ){
+	int count = 0;
+	ofstream fout( filename );
+	for (Candidates::const_iterator i = answer.begin(); i != answer.end(); ++i){
+		++count;
+		assert((*i).size() == 1);
+		fout <<  (*i).at(0) << " (var# " << setw(6) /*fixed width*/ << count << " )" << endl;
+	}
+	cout << "   written in ... " << filename << endl;
+	return ;
+}
+
+void usage(){
+  cout << "usage:    ./solver input.cnf output.txt" << endl;
+  return ;
+}
 
 int main(int argc, char const *argv[])
 {
 	int N_clause, N_var; //number of Clause, variable
 
-	Constraint constraint = init_cons(N_clause, N_var);
-	
+  if( argc != 3 ){
+    usage();
+    exit(1);
+  }
+
+	// Constraint constraint = init_cons(N_clause, N_var);
+	Constraint constraint = init_cons_stdin(N_clause, N_var, argv);
+
 	//割り当て済み変数の管理
 	// bitset<N_var> assigned; // なんかテンプレート引数に変数は使えないっぽい
 	// std::vector<bool> assigned(N_var,false);
@@ -246,7 +313,8 @@ int main(int argc, char const *argv[])
 	if(sat_flag)
 	{
 		cout << "sat: " << endl;
-		print_ans(answer);
+		// print_ans(answer);
+		print_ans_to_file(answer, argv[2]);
 	}
 	else
 	{
