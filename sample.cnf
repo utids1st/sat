@@ -7,4 +7,5 @@ c ex. (x1 or x2) and (x4 or x5) and (not x2)
 p cnf 5 4
 1 2 0 
 4 5 0
--2 0
+-1 0
+-2 3 0

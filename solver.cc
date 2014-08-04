@@ -81,7 +81,8 @@ Constraint init_cons(int &N_clause, int &N_var){
 
 	Constraint constraint;
 
-	while(getline(ifs,line)){
+	for(int i = 0; i < N_clause; ++i){ 
+		getline(ifs,line);
 		Clause clause;
 		clause = get_line(line);
 
@@ -223,6 +224,7 @@ int main(int argc, char const *argv[])
 	int N_clause, N_var; //number of Clause, variable
 
 	Constraint constraint = init_cons(N_clause, N_var);
+	print_cons(constraint);
 	
 	//割り当て済み変数の管理
 	// bitset<N_var> assigned; // なんかテンプレート引数に変数は使えないっぽい
